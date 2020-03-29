@@ -13,6 +13,7 @@ import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.lms.dto.DashboardRequest;
 import org.lms.dto.DashboardResponse;
 import org.lms.dto.LeaveDashboardResponse;
 import org.lms.dto.LeaveTypeResponse;
@@ -25,6 +26,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 
+import lombok.extern.log4j.Log4j2;
+
+@Log4j2
 @SpringBootTest
 class LeaveDashboardServiceTest {
 
@@ -37,15 +41,17 @@ class LeaveDashboardServiceTest {
 	@MockBean
 	private LeaveTypeService leaveTypeService;
 
-	LeaveType leaveType_1;
-	LeaveType leaveType_2;
-	LeaveType leaveType_3;
-	List<LeaveType> asList;
-	List<LeaveTypeResponse> leaveTypeList;
+	private LeaveType leaveType_1;
+	private LeaveType leaveType_2;
+	private LeaveType leaveType_3;
+	private List<LeaveType> asList;
+	private List<LeaveTypeResponse> leaveTypeList;
 
 	private LeaveDashboard leaveDashboard_1;
 	private LeaveDashboard leaveDashboard_2;
 	private LeaveDashboard leaveDashboard_3;
+
+	private DashboardRequest dashboardRequest;
 
 	@BeforeEach
 	void setUp() throws Exception {
@@ -66,8 +72,21 @@ class LeaveDashboardServiceTest {
 		});
 
 		leaveDashboard_1 = new LeaveDashboard();
+		leaveDashboard_1.setEmployeeId(10001L);
+		leaveDashboard_1.setTotalLeaves(16);
+		leaveDashboard_1.setLeaveType("AL");
+		leaveDashboard_1.setConsumedLeaves(1);
+		leaveDashboard_1.setRemainingLeaves(15);
+
 		leaveDashboard_2 = new LeaveDashboard();
 		leaveDashboard_3 = new LeaveDashboard();
+
+		dashboardRequest = new DashboardRequest();
+		dashboardRequest.setEmployeeId(10001L);
+		dashboardRequest.setLeaveType("AL");
+		dashboardRequest.setConsumedLeaves(16);
+		dashboardRequest.setConsumedLeaves(6);
+		dashboardRequest.setRemainingLeaves(10);
 
 	}
 
@@ -76,8 +95,8 @@ class LeaveDashboardServiceTest {
 		Mockito.when(leaveTypeService.getAllLeaveType()).thenReturn(leaveTypeList);
 		List<LeaveDashboard> asList2 = Arrays.asList(leaveDashboard_1, leaveDashboard_2, leaveDashboard_3);
 		Mockito.when(dashboardRepository.saveAll(ArgumentMatchers.<List<LeaveDashboard>>any())).thenReturn(asList2);
-		List<LeaveDashboard> populateDashboard = leaveDashboardService.populateDashboard(21021L);
-		assertThat(populateDashboard).containsAll(asList2);
+		List<LeaveDashboardResponse> populateDashboard = leaveDashboardService.populateDashboard(21021L);
+		assertThat(populateDashboard.size()).isGreaterThanOrEqualTo(1);
 	}
 
 	@Test
@@ -106,11 +125,36 @@ class LeaveDashboardServiceTest {
 		leaveDashboard_1.setLeaveType("AL");
 		Mockito.when(dashboardRepository.findByEmployeeIdAndLeaveType(ArgumentMatchers.anyLong(),
 				ArgumentMatchers.anyString())).thenReturn(Optional.of(leaveDashboard_1));
-		LeaveDashboardResponse byEmployeeIdAndLeaveType = leaveDashboardService.getByEmployeeIdAndLeaveType(2311L,
+		Optional<LeaveDashboardResponse> byEmployeeIdAndLeaveType = leaveDashboardService.getByEmployeeIdAndLeaveType(2311L,
 				"AL");
 
-		assertEquals(leaveDashboard_1.getEmployeeId(), byEmployeeIdAndLeaveType.getEmployeeId());
-		assertEquals(leaveDashboard_1.getLeaveType(), byEmployeeIdAndLeaveType.getLeaveType());
+		assertEquals(leaveDashboard_1.getEmployeeId(), byEmployeeIdAndLeaveType.get().getEmployeeId());
+		assertEquals(leaveDashboard_1.getLeaveType(), byEmployeeIdAndLeaveType.get().getLeaveType());
+	}
+
+	@Test
+	void testFetchAndUpdateDashboard() {
+
+		Mockito.when(dashboardRepository.findByEmployeeIdAndLeaveType(ArgumentMatchers.anyLong(),
+				ArgumentMatchers.anyString())).thenReturn(Optional.of(leaveDashboard_1));
+
+		Mockito.when(dashboardRepository.save(Mockito.any(LeaveDashboard.class))).thenReturn(leaveDashboard_1);
+
+		log.info("Before - ID: {}, Type: {}, Total: {}, Consumed: {}, Remaining: {}", dashboardRequest.getEmployeeId(),
+				leaveDashboard_1.getLeaveType(), leaveDashboard_1.getTotalLeaves(),
+				leaveDashboard_1.getConsumedLeaves(), leaveDashboard_1.getRemainingLeaves());
+
+		LeaveDashboardResponse fetchAndUpdateDashboard = leaveDashboardService
+				.fetchAndUpdateDashboard(dashboardRequest);
+
+		log.info("Updated - ID: {}, Type: {}, Total: {}, Consumed: {}, Remaining: {}",
+				fetchAndUpdateDashboard.getEmployeeId(), fetchAndUpdateDashboard.getLeaveType(),
+				fetchAndUpdateDashboard.getTotalLeaves(), fetchAndUpdateDashboard.getConsumedLeaves(),
+				fetchAndUpdateDashboard.getRemainingLeaves());
+
+		assertEquals(dashboardRequest.getConsumedLeaves(), fetchAndUpdateDashboard.getConsumedLeaves());
+		assertEquals(dashboardRequest.getRemainingLeaves(), fetchAndUpdateDashboard.getRemainingLeaves());
+		assertEquals(dashboardRequest.getLeaveType(), fetchAndUpdateDashboard.getLeaveType());
 	}
 
 }
