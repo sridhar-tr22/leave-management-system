@@ -10,6 +10,7 @@ import org.lms.dto.DashboardRequest;
 import org.lms.dto.DashboardResponse;
 import org.lms.dto.LeaveDashboardResponse;
 import org.lms.dto.LeaveTypeResponse;
+import org.lms.dto.ResponseMessage;
 import org.lms.entities.LeaveDashboard;
 import org.lms.exceptions.FaultException;
 import org.lms.repositories.LeaveDashboardRepository;
@@ -33,22 +34,21 @@ public class LeaveDashboardServiceImpl implements LeaveDashboardService {
 
 	@Override
 	public List<LeaveDashboardResponse> populateDashboard(Long employeeId) {
-		
+
 		List<LeaveDashboardResponse> asListDash = new ArrayList<>();
-		   
+
 		List<LeaveDashboard> saveAll = dashboardRepository.saveAll(prepareRequests(employeeId));
-		saveAll.stream()
-			.forEach( item -> {
-				LeaveDashboardResponse response = new LeaveDashboardResponse();
-				response.setDashboardId(item.getDashboardId());
-				response.setEmployeeId(item.getEmployeeId());
-				response.setLeaveType(item.getLeaveType());
-				response.setTotalLeaves(item.getTotalLeaves());
-				response.setConsumedLeaves(item.getConsumedLeaves());
-				response.setRemainingLeaves(item.getRemainingLeaves());
-				asListDash.add(response);
-			});
-		
+		saveAll.stream().forEach(item -> {
+			LeaveDashboardResponse response = new LeaveDashboardResponse();
+			response.setDashboardId(item.getDashboardId());
+			response.setEmployeeId(item.getEmployeeId());
+			response.setLeaveType(item.getLeaveType());
+			response.setTotalLeaves(item.getTotalLeaves());
+			response.setConsumedLeaves(item.getConsumedLeaves());
+			response.setRemainingLeaves(item.getRemainingLeaves());
+			asListDash.add(response);
+		});
+
 		return asListDash;
 	}
 
@@ -81,24 +81,28 @@ public class LeaveDashboardServiceImpl implements LeaveDashboardService {
 	public DashboardResponse getDashboardForEmployee(Long employeeId) {
 
 		DashboardResponse dashboardResponse = new DashboardResponse();
-		List<LeaveDashboardResponse> asList = new ArrayList<>();
-
+		final List<LeaveDashboardResponse> dashboardList;
 		Optional<List<LeaveDashboard>> findAllByEmployeeId = dashboardRepository.findAllByEmployeeId(employeeId);
-		findAllByEmployeeId.ifPresent(items -> {
-			items.stream().forEach(item -> {
+		if(findAllByEmployeeId.isPresent()) {
+			dashboardList = new ArrayList<>();
+			findAllByEmployeeId.get().stream().forEach(item -> {
 				LeaveDashboardResponse leaveDashboard = new LeaveDashboardResponse();
 				leaveDashboard.setEmployeeId(item.getEmployeeId());
 				leaveDashboard.setLeaveType(item.getLeaveType());
 				leaveDashboard.setTotalLeaves(item.getTotalLeaves());
 				leaveDashboard.setConsumedLeaves(item.getConsumedLeaves());
 				leaveDashboard.setRemainingLeaves(item.getRemainingLeaves());
-				asList.add(leaveDashboard);
+				dashboardList.add(leaveDashboard);
 			});
-		});
-		findAllByEmployeeId.orElseThrow(
-				() -> new FaultException("Leave Dashboard is not available for the given Employee, please try later."));
+		} else {
+			dashboardList = populateDashboard(employeeId);
+		}
+		ResponseMessage message = new ResponseMessage();
+		message.setStatusMessage("Dashboard Loaded Successfully.");
+		message.setStatusCode("200");
 		dashboardResponse.setEmployeeId(employeeId);
-		dashboardResponse.setLeaveDashboardList(asList);
+		dashboardResponse.setLeaveDashboardList(dashboardList);
+		dashboardResponse.setMessage(message);
 		return dashboardResponse;
 	}
 

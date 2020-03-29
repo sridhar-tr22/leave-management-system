@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.lms.entities.EmployeeDetail;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,6 +29,7 @@ import lombok.extern.log4j.Log4j2;
 @Log4j2
 @DataJpaTest
 @AutoConfigureTestDatabase(replace = Replace.NONE)
+@Disabled
 class EmployeeDetailRepositoryTest {
 
 	@Autowired

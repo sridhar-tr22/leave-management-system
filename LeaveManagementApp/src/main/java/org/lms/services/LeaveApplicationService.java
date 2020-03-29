@@ -1,6 +1,7 @@
 package org.lms.services;
 
 import org.lms.dto.LeaveRequest;
+import org.lms.dto.LeaveResponse;
 
 /**
  *
@@ -16,6 +17,6 @@ public interface LeaveApplicationService {
 	/**
 	 * @param leaveRequest
 	 */
-	void applyLeave(LeaveRequest leaveRequest);
+	public LeaveResponse applyLeave(LeaveRequest leaveRequest);
 
 }

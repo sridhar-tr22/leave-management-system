@@ -2,7 +2,6 @@ package org.lms.services;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import org.mockito.ArgumentMatchers;
 
@@ -19,7 +18,6 @@ import org.lms.dto.LeaveDashboardResponse;
 import org.lms.dto.LeaveTypeResponse;
 import org.lms.entities.LeaveDashboard;
 import org.lms.entities.LeaveType;
-import org.lms.exceptions.FaultException;
 import org.lms.repositories.LeaveDashboardRepository;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -112,11 +110,8 @@ class LeaveDashboardServiceTest {
 	@Test
 	void testGetDashboardForEmployee_IfNotPresent() {
 		Mockito.when(dashboardRepository.findAllByEmployeeId(Mockito.any(Long.class))).thenReturn(Optional.empty());
-		FaultException exception = assertThrows(FaultException.class,
-				() -> leaveDashboardService.getDashboardForEmployee(21121L));
-		assertEquals("Leave Dashboard is not available for the given Employee, please try later.",
-				exception.getMessage());
-
+		DashboardResponse dashboardForEmployee = leaveDashboardService.getDashboardForEmployee(21121L);
+		assertEquals(dashboardForEmployee.getEmployeeId(), 21121L);
 	}
 
 	@Test
