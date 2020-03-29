@@ -6,7 +6,7 @@ import java.io.Serializable;
  * @author User1
  *
  */
-public class DashBoardRequest implements Serializable {
+public class DashboardRequest implements Serializable {
 
 	/**
 	 * 
