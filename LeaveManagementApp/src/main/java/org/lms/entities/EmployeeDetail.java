@@ -1,13 +1,12 @@
 package org.lms.entities;
 
 import java.io.Serializable;
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 
 import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Table;
+import javax.validation.constraints.NotNull;
 
 import org.springframework.data.annotation.CreatedBy;
 import org.springframework.data.annotation.CreatedDate;
@@ -22,19 +21,24 @@ public class EmployeeDetail implements Serializable {
 	private static final long serialVersionUID = 1L;
 
 	@Id
-	@GeneratedValue(strategy = GenerationType.SEQUENCE)
 	private Long employeeId;
+	
 	private String email;
+	
+	@NotNull
 	private String firstName;
+	@NotNull
 	private String lastName;
+	
 	private String managerId;
+	
 	private String password;
 
 	@CreatedBy
 	private String createdUser;
 
 	@CreatedDate
-	private LocalDateTime createdDate;
+	private LocalDate createdDate;
 
 	/**
 	 * no-argument constructor
@@ -42,21 +46,32 @@ public class EmployeeDetail implements Serializable {
 	public EmployeeDetail() {
 	}
 
+	
+	
 	/**
+	 * @param employeeId
 	 * @param email
 	 * @param firstName
 	 * @param lastName
 	 * @param managerId
 	 * @param password
+	 * @param createdUser
+	 * @param createdDate
 	 */
-	public EmployeeDetail(String email, String firstName, String lastName, String managerId, String password) {
+	public EmployeeDetail(Long employeeId, String email, @NotNull String firstName, @NotNull String lastName,
+			String managerId, String password, LocalDate createdDate) {
 		super();
+		this.employeeId = employeeId;
 		this.email = email;
 		this.firstName = firstName;
 		this.lastName = lastName;
 		this.managerId = managerId;
 		this.password = password;
+		this.createdUser = "ADMIN";
+		this.createdDate = createdDate;
 	}
+
+
 
 	/**
 	 * @return the email
@@ -159,14 +174,14 @@ public class EmployeeDetail implements Serializable {
 	/**
 	 * @return the createdDate
 	 */
-	public LocalDateTime getCreatedDate() {
+	public LocalDate getCreatedDate() {
 		return createdDate;
 	}
 
 	/**
 	 * @param createdDate the createdDate to set
 	 */
-	public void setCreatedDate(LocalDateTime createdDate) {
+	public void setCreatedDate(LocalDate createdDate) {
 		this.createdDate = createdDate;
 	}
 
