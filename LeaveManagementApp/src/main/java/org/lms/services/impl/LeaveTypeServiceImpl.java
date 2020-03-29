@@ -5,7 +5,6 @@ package org.lms.services.impl;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 import org.lms.dto.LeaveTypeResponse;
 import org.lms.entities.LeaveType;
@@ -42,10 +41,6 @@ public class LeaveTypeServiceImpl implements LeaveTypeService {
 	 */
 	private List<LeaveTypeResponse> mapEntityToDto(List<LeaveType> source) {
 		List<LeaveTypeResponse> leaveTypeList = new ArrayList<>();
-		if (Objects.isNull(source)) {
-			//returning empty list.
-			return leaveTypeList;
-		}
 		source.stream().forEach(e -> {
 			LeaveTypeResponse leaveTypeResponse = new LeaveTypeResponse();
 			leaveTypeResponse.setLeaveTypeId(e.getLeaveTypeId());

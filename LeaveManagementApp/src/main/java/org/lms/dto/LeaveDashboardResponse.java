@@ -9,11 +9,26 @@ import java.io.Serializable;
 public class LeaveDashboardResponse implements Serializable {
 
 	private static final long serialVersionUID = 1L;
+	private long dashboardId;
 	private long employeeId;
 	private String leaveType;
 	private int totalLeaves;
 	private int consumedLeaves;
 	private int remainingLeaves;
+
+	/**
+	 * @return the dashboardId
+	 */
+	public long getDashboardId() {
+		return dashboardId;
+	}
+
+	/**
+	 * @param dashboardId the dashboardId to set
+	 */
+	public void setDashboardId(long dashboardId) {
+		this.dashboardId = dashboardId;
+	}
 
 	/**
 	 * @return the employeeId

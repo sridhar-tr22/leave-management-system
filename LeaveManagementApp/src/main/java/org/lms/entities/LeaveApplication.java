@@ -26,6 +26,7 @@ public class LeaveApplication implements Serializable {
 	private String leaveType;
 	private String status;
 	private LocalDate toDate;
+	private int daysCount;
 
 	@CreatedDate
 	private LocalDate createdDate;
@@ -150,6 +151,20 @@ public class LeaveApplication implements Serializable {
 	 */
 	public void setCreatedDate(LocalDate createdDate) {
 		this.createdDate = createdDate;
+	}
+
+	/**
+	 * @return the daysCount
+	 */
+	public int getDaysCount() {
+		return daysCount;
+	}
+
+	/**
+	 * @param daysCount the daysCount to set
+	 */
+	public void setDaysCount(int daysCount) {
+		this.daysCount = daysCount;
 	}
 
 }

@@ -1,11 +1,11 @@
 package org.lms.services;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.lms.dto.DashboardRequest;
 import org.lms.dto.DashboardResponse;
 import org.lms.dto.LeaveDashboardResponse;
-import org.lms.entities.LeaveDashboard;
 
 /**
  * @author User1
@@ -17,7 +17,7 @@ public interface LeaveDashboardService {
 	 * @param employeeId
 	 * @return
 	 */
-	public List<LeaveDashboard> populateDashboard(Long employeeId);
+	public List<LeaveDashboardResponse> populateDashboard(Long employeeId);
 
 	/**
 	 * @param employeeId
@@ -30,7 +30,7 @@ public interface LeaveDashboardService {
 	 * @param type
 	 * @return
 	 */
-	public LeaveDashboardResponse getByEmployeeIdAndLeaveType(Long employeeId, String type);
+	public Optional<LeaveDashboardResponse> getByEmployeeIdAndLeaveType(Long employeeId, String type);
 
 	/**
 	 * @param dashboardRequest

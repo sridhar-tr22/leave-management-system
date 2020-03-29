@@ -32,10 +32,24 @@ public class LeaveDashboardServiceImpl implements LeaveDashboardService {
 	private LeaveTypeService leaveTypeService;
 
 	@Override
-	public List<LeaveDashboard> populateDashboard(Long employeeId) {
-		List<LeaveDashboard> preparedRequests = prepareRequests(employeeId);
-		List<LeaveDashboard> saveAll = dashboardRepository.saveAll(preparedRequests);
-		return saveAll;
+	public List<LeaveDashboardResponse> populateDashboard(Long employeeId) {
+		
+		List<LeaveDashboardResponse> asListDash = new ArrayList<>();
+		   
+		List<LeaveDashboard> saveAll = dashboardRepository.saveAll(prepareRequests(employeeId));
+		saveAll.stream()
+			.forEach( item -> {
+				LeaveDashboardResponse response = new LeaveDashboardResponse();
+				response.setDashboardId(item.getDashboardId());
+				response.setEmployeeId(item.getEmployeeId());
+				response.setLeaveType(item.getLeaveType());
+				response.setTotalLeaves(item.getTotalLeaves());
+				response.setConsumedLeaves(item.getConsumedLeaves());
+				response.setRemainingLeaves(item.getRemainingLeaves());
+				asListDash.add(response);
+			});
+		
+		return asListDash;
 	}
 
 	/**
@@ -56,6 +70,7 @@ public class LeaveDashboardServiceImpl implements LeaveDashboardService {
 			dashboard.setTotalLeaves(e.getLeaveTypeCount());
 			dashboard.setConsumedLeaves(0);
 			dashboard.setCreatedDate(LocalDate.now());
+			dashboard.setModifiedDate(LocalDate.now());
 			dashboard.setRemainingLeaves(e.getLeaveTypeCount());
 			asDashRequestList.add(dashboard);
 		});
@@ -88,7 +103,7 @@ public class LeaveDashboardServiceImpl implements LeaveDashboardService {
 	}
 
 	@Override
-	public LeaveDashboardResponse getByEmployeeIdAndLeaveType(Long employeeId, String type) {
+	public Optional<LeaveDashboardResponse> getByEmployeeIdAndLeaveType(Long employeeId, String type) {
 		LeaveDashboardResponse leaveDashboardResponse = new LeaveDashboardResponse();
 		Optional<LeaveDashboard> findByEmployeeIdAndLeaveType = dashboardRepository
 				.findByEmployeeIdAndLeaveType(employeeId, type);
@@ -102,7 +117,7 @@ public class LeaveDashboardServiceImpl implements LeaveDashboardService {
 		});
 		findByEmployeeIdAndLeaveType.orElseThrow(
 				() -> new FaultException("Leave Type is not present for the given Employee, please try later."));
-		return leaveDashboardResponse;
+		return Optional.of(leaveDashboardResponse);
 	}
 
 	/**
