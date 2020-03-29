@@ -2,6 +2,7 @@ package org.lms.services;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.time.LocalDate;
 import java.util.Arrays;
@@ -10,8 +11,11 @@ import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.lms.dto.DashboardRequest;
 import org.lms.dto.LeaveDashboardResponse;
 import org.lms.dto.LeaveRequest;
+import org.lms.dto.LeaveResponse;
+import org.lms.dto.ResponseMessage;
 import org.lms.entities.LeaveApplication;
 import org.lms.exceptions.FaultException;
 import org.lms.repositories.LeaveApplicationRepository;
@@ -21,6 +25,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 
+import lombok.extern.log4j.Log4j2;
+
+@Log4j2
 @SpringBootTest
 class LeaveApplicationServiceTest {
 
@@ -38,7 +45,9 @@ class LeaveApplicationServiceTest {
 	LeaveDashboardResponse dashboardResponseAL;
 	LeaveDashboardResponse dashboardResponseRH;
 	LeaveDashboardResponse dashboardResponsePL;
+	LeaveDashboardResponse dashboardResponse;
 	LeaveApplication application;
+	LeaveApplication leaveApplication;
 
 	@BeforeEach
 	void setUp() throws Exception {
@@ -69,6 +78,18 @@ class LeaveApplicationServiceTest {
 		dashboardResponsePL.setTotalLeaves(1);
 		dashboardResponsePL.setRemainingLeaves(1);
 		dashboardResponsePL.setConsumedLeaves(0);
+
+		dashboardResponse = new LeaveDashboardResponse();
+		dashboardResponse.setDashboardId(3L);
+		dashboardResponse.setEmployeeId(1234L);
+		dashboardResponse.setLeaveType("AL");
+		dashboardResponse.setTotalLeaves(16);
+		dashboardResponse.setRemainingLeaves(13);
+		dashboardResponse.setConsumedLeaves(3);
+
+		application = new LeaveApplication(11L, 1234L, LocalDate.of(2020, 04, 10), "AL", "Applied",
+				LocalDate.of(2020, 04, 12), LocalDate.now());
+		application.setDaysCount(3);
 	}
 
 	@Test
@@ -78,9 +99,22 @@ class LeaveApplicationServiceTest {
 				dashboardService.getByEmployeeIdAndLeaveType(ArgumentMatchers.anyLong(), ArgumentMatchers.anyString()))
 				.thenReturn(Optional.of(dashboardResponseAL));
 
-		// Mockito.when(applicationRepository.saveAndFlush(Mockito.any(LeaveApplication.class))).thenReturn(arg0);
+		Mockito.when(applicationRepository.saveAndFlush(Mockito.any(LeaveApplication.class))).thenReturn(application);
+		Mockito.when(dashboardService.fetchAndUpdateDashboard(Mockito.any(DashboardRequest.class)))
+				.thenReturn(dashboardResponse);
 
-		applicationService.applyLeave(leaveRequest);
+		LeaveResponse appliedLeave = applicationService.applyLeave(leaveRequest);
+		log.info("Applied \"{}\" type leave for {} days from {} to {}", appliedLeave.getLeaveType(),
+				appliedLeave.getNumberofDays(), appliedLeave.getFromDate(), appliedLeave.getToDate());
+		ResponseMessage message = (ResponseMessage) appliedLeave.getMessage();
+
+		assertThat(appliedLeave.getLeaveType()).isNotEmpty();
+
+		assertThat(appliedLeave.getStatus()).isNotEmpty();
+
+		assertThat(appliedLeave.getStatus()).isEqualTo("Applied");
+
+		assertThat(message.getStatusCode()).isEqualTo("200");
 
 	}
 
@@ -95,7 +129,12 @@ class LeaveApplicationServiceTest {
 				dashboardResponsePL);
 		Mockito.when(dashboardService.populateDashboard(ArgumentMatchers.anyLong())).thenReturn(asList);
 
-		applicationService.applyLeave(leaveRequest);
+		Mockito.when(applicationRepository.saveAndFlush(Mockito.any(LeaveApplication.class))).thenReturn(application);
+		Mockito.when(dashboardService.fetchAndUpdateDashboard(Mockito.any(DashboardRequest.class)))
+				.thenReturn(dashboardResponse);
+		LeaveResponse applyLeave = applicationService.applyLeave(leaveRequest);
+		
+		assertThat(applyLeave.getRemainingLeaves()).isPositive();
 	}
 
 	@Test
@@ -105,14 +144,16 @@ class LeaveApplicationServiceTest {
 				dashboardService.getByEmployeeIdAndLeaveType(ArgumentMatchers.anyLong(), ArgumentMatchers.anyString()))
 				.thenReturn(Optional.of(dashboardResponseAL));
 
-		// Mockito.when(applicationRepository.saveAndFlush(Mockito.any(LeaveApplication.class))).thenReturn(arg0);
+		Mockito.when(applicationRepository.saveAndFlush(Mockito.any(LeaveApplication.class))).thenReturn(application);
+		Mockito.when(dashboardService.fetchAndUpdateDashboard(Mockito.any(DashboardRequest.class)))
+				.thenReturn(dashboardResponse);
 
 		FaultException exception = assertThrows(FaultException.class, () -> {
 			applicationService.applyLeave(leaveRequest_for_30_days);
 		});
-		
-		assertEquals("Insufficient Leave Balance to apply leave.", exception.getMessage());
 
+		assertEquals("Insufficient Leave Balance to apply leave.", exception.getMessage());
 	}
 
 }
+

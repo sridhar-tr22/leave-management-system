@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.lms.entities.LeaveDashboard;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,6 +20,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @Log4j2
 @DataJpaTest
 @AutoConfigureTestDatabase(replace = Replace.NONE)
+@Disabled
 class LeaveDashboardRepositoryTest {
 
 	@Autowired

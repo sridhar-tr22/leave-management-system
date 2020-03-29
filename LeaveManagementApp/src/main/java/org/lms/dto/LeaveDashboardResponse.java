@@ -2,6 +2,8 @@ package org.lms.dto;
 
 import java.io.Serializable;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 /**
  * @author User1
  *
@@ -9,6 +11,7 @@ import java.io.Serializable;
 public class LeaveDashboardResponse implements Serializable {
 
 	private static final long serialVersionUID = 1L;
+	@JsonIgnore
 	private long dashboardId;
 	private long employeeId;
 	private String leaveType;

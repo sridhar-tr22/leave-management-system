@@ -12,6 +12,8 @@ import javax.transaction.Transactional;
 import org.lms.dto.DashboardRequest;
 import org.lms.dto.LeaveDashboardResponse;
 import org.lms.dto.LeaveRequest;
+import org.lms.dto.LeaveResponse;
+import org.lms.dto.ResponseMessage;
 import org.lms.entities.LeaveApplication;
 import org.lms.exceptions.FaultException;
 import org.lms.repositories.LeaveApplicationRepository;
@@ -36,16 +38,34 @@ public class LeaveApplicationServiceImpl implements LeaveApplicationService {
 	@Autowired
 	private LeaveDashboardService dashboardService;
 
+	private LeaveResponse leaveResponse;
+	private ResponseMessage message;
+
 	@Override
 	@Transactional
-	public void applyLeave(LeaveRequest leaveRequest) {
+	public LeaveResponse applyLeave(LeaveRequest leaveRequest) {
 		log.info("Leave Request from Id: {}, Type: {}, From: {}, To:{}", leaveRequest.getEmployeeId(),
 				leaveRequest.getLeaveType(), leaveRequest.getFromDate(), leaveRequest.getToDate());
 		LeaveDashboardResponse leaveDashboard = getDashboardForEmployee(leaveRequest);
 		LeaveApplication leaveApplicationRequest = prepareLeaveAppRequest(leaveRequest);
 		DashboardRequest leaveDashboardRequest = prepareDashboardRequest(leaveRequest, leaveDashboard);
-		applicationRepository.saveAndFlush(leaveApplicationRequest);
-		dashboardService.fetchAndUpdateDashboard(leaveDashboardRequest);
+		LeaveApplication saveAndFlush = applicationRepository.saveAndFlush(leaveApplicationRequest);
+		LeaveDashboardResponse fetchAndUpdateDashboard = dashboardService
+				.fetchAndUpdateDashboard(leaveDashboardRequest);
+		leaveResponse = new LeaveResponse();
+		leaveResponse.setEmployeeId(saveAndFlush.getEmployeeId());
+		leaveResponse.setLeaveType(saveAndFlush.getLeaveType());
+		leaveResponse.setRemainingLeaves(fetchAndUpdateDashboard.getRemainingLeaves());
+		leaveResponse.setStatus(saveAndFlush.getStatus());
+		leaveResponse.setNumberofDays(saveAndFlush.getDaysCount());
+		leaveResponse.setFromDate(saveAndFlush.getFromDate());
+		leaveResponse.setToDate(saveAndFlush.getToDate());
+		message = new ResponseMessage();
+		message.setStatusCode("200");
+		message.setStatusMessage(String.format("\"%s\" leave is applied from %s to %s successfully.",
+				leaveResponse.getLeaveType(), leaveResponse.getFromDate(), leaveResponse.getToDate()));
+		leaveResponse.setMessage(message);
+		return leaveResponse;
 	}
 
 	private LeaveDashboardResponse getDashboardForEmployee(LeaveRequest leaveRequest) {
@@ -86,7 +106,7 @@ public class LeaveApplicationServiceImpl implements LeaveApplicationService {
 		// 4. To Date
 		application.setToDate(request.getToDate());
 		// 5. Action
-		application.setStatus("Applied");
+		application.setStatus("APPLIED");
 		// 6. Number of Days
 		application.setDaysCount(request.numberOfLeaveDays());
 		// 7. Created Date
